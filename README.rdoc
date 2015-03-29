@@ -13,7 +13,7 @@ or
 
 Once installed, write your initializer and yml mappings.
 
-== Initializer & Defaults
+== Initializer
 
 Most behaviors in AnalyticsInstrumentation are one-size-fits-all.
 
@@ -65,7 +65,7 @@ The behaviors exposed are:
       }
     end
 
-== Configuring Events & Their Properties
+== YML Mappings: Named Events & Properties
 
 AnalyticsInstrumentation maps controller#action pairs to events using YML files in `./config/analytics/*.yml`.
 
