@@ -1,3 +1,225 @@
 = AnalyticsInstrumentation
 
-This project rocks and uses MIT-LICENSE.
+== Install
+
+    gem 'analytics_instrumentation'
+
+or
+
+    gem install 'analytics_instrumentation'
+
+
+== Usage
+
+Once installed, write your initializer and yml mappings.
+
+== Initializer & Defaults
+
+Most behaviors in AnalyticsInstrumentation are one-size-fits-all.
+
+A few behaviors can be hooked into via an initializer (eg. `./config/initializers/analytics_instrumentation.rb`) to be customized to your app.
+
+The behaviors exposed are:
+
+    # ./config/initializers/analytics_instrumentation.rb
+
+    AnalyticsImplementation.configure do |config|
+      # Your Segment.io write key is required. We will instantiate the client.
+      config.segment_write_key = ENV["SEGMENT_API_KEY"] || ""
+
+      # Define a hash of traits to be passed to `#identify()` calls for each user.
+      config.custom_user_traits = (user) -> {
+        {
+          name: user.full_name,
+          email: user.email,
+          created_at: user.created_at,
+          provider: user.provider,
+          provider_username: user.provider_username,
+          postings_count: user.postings_count,
+          public_collections_count: user.collections_count,
+          private_collections_count: user.private_collections_count,
+          followers_count: user.followers_count,
+          following_count: user.followed_users_count
+        }
+      }
+
+      # # AnalyticsInstrumentation sends a variety of properties with each of your events:
+      # 1. Event-specific properties are configured via the YML files (see below)
+      # 2. System-wide properties are included for you with all events (see below)
+      # 3. To have your own system-wide properties included on all events, have them returned by a Proc set to `config.extra_event_properties`, like so:
+      config.extra_event_properties = -> {
+        {
+          user_sees_experiment_a: current_user.experiment_a?
+          user_sees_experiment_b: current_user.experiment_b?
+        }
+      }
+
+      # To capture and handle errors that happen within AnalyticsInstrumentation,
+      # Define an error_handler, like so:
+      config.error_handler = (e, msg) -> {
+        if Rails.env.production?
+          Rollbar.error(e, msg)
+        else
+          raise
+        end
+      }
+    end
+
+== Configuring Events & Their Properties
+
+AnalyticsInstrumentation maps controller#action pairs to events using YML files in `./config/analytics/*.yml`.
+
+These files also define how properties for each event should be constructed, based on  the corresponding request/response's view_assigns. (Calling @var_name in a view)
+
+Examples:
+
+1. Requests -> Event names
+
+    # ./config/analytics/home.yml
+
+    home#landing:
+      name: Viewed Home page
+    home#press:
+      name: Viewed Press page
+    home#app:
+      name: Viewed App page
+
+2. Requests -> Events with simple properties
+
+    # ./config/analytics/issues.yml
+
+    issues#index:
+      name: Viewed Issue List
+
+    issues#show:
+      name: Viewed Issue
+      page_identifier: "@issue.id"
+      parameters:
+        issue_number: "params[:issue_number]"
+        title: "@issue.title"
+
+3. Requests -> Events with dynamic properties
+
+    # ./config/analytics/products.yml
+
+    api#post_product:
+      name: 'if @likedProduct then "Liked Product" else "Unliked Product" end'
+
+    products#show:
+      name: Viewed Product
+      page_identifier: "@product.id"
+      parameters:
+        product_id: "@product.id"
+        name: '@product.name.gsub("\"", "")'
+        brand: "@brand.try(:name)"
+        category: "@category.try(:name)"
+
+    products#create_comment:
+      name: Created Comment
+      parameters:
+        product_id: "@product.id"
+        product_name: "@product.name"
+        comment_text: "@comment.message"
+        previous_comment_count: "@product.comments_count"
+
+
+== Simple "Page View" Events
+
+AnalyticsInstrumentation will automatically trigger a "Page View" event for every request, passing `request.path` as a `page` property, like so:
+
+    properties = {
+      page: request.path
+    }
+
+This is in addition to the rest of the system-wide properties attached to all events.
+
+
+== System Wide Properties Attached to All Events
+
+    {
+      "Raw Analytics ID"  => raw_analytics_id,
+      "Ajax"              => !request.xhr?.nil?,
+
+      "logged_in"         => !!current_user,
+      "source"            => params[:source], if params[:source]
+
+      "Originating Page Identifier" => session["previous-page-identifier"],
+      "Originating Page Type"       => session["previous-page-type"]
+    }
+
+All new visitors are cookied with a `Raw Analytics ID`, useful as the Actor property when looking at the behavior of logged-out traffic. `Raw Analytics Id` is aliased to user_id when a user logs in, if any of your analytics tools support `#alias()`.
+
+`Originating Page Type/ID` are set automatically based on the previous internal request. `Type` is the Name of the most recently triggered custom event. `Identifier` is the corresponding `page_identifier:`. Search the YML examples for this in action. Useful to see "How did people get here?".
+
+Send `params[:source]` with any GET or POST request to differentiate where in the UI a given event was triggered. eg:
+
+    POST /user/create
+    {
+      user: {...},
+      source: 'Navbar'
+    }
+
+vs
+
+    POST /user/create
+    {
+      user: {...},
+      source: 'Primary CTA'
+    }
+
+
+== System Wide Properties Attached Only to Logged In Requests
+
+Any user traits you return from your initializer's `custom_user_traits` config will be merged with the following default user traits:
+
+    {
+      "User Created At" => current_user.created_at,
+      "Username"        => current_user.try(:username),
+      "Full name"       => current_user.try(:full_name),
+      "User ID"         => current_user.id,
+      "Login Provider"  => current_user.try(:provider) || "Email",
+    }
+
+== Marketing Attribution
+
+AnalyticsInstrumentation makes it easy to see which of your UTM campaigns and external referrers are contributing to product engagement and revenue events deeper in the funnel.
+
+This is done by tracking the first-ever and most-recent set of UTM parameters, as well as the first-ever and most-recent external HTTP referrer for each unique visitor to your site.
+
+These data are passed into all named events (the ones in your YML files) as:
+
+    {
+      first_external_referrer:  'google.com',
+      latest_external_referrer: 'twitter.com',
+      first_utm: {
+        name:     'Spring Campaign 1',
+        source:   'twitter',
+        medium:   'card',
+        term:     'flowers',
+        content:  'variant1'
+      },
+      latest_utm: {
+        name:     'Spring Campaign 1',
+        source:   'twitter',
+        medium:   'card',
+        term:     'flowers',
+        content:  'variant1'
+      }
+    }
+
+This is useful for doing things like "Count the number of new users generated by each ad campaign" or "How many posts were created by users from that buzzfeed article?".
+
+
+== License
+
+MIT
+
+== Thoughts, Feedback, Ideas?
+
+Please tweet to [@jfeldstein](twitter.com/jfeldstein) or [@msfeldstein](twitter.com/msfeldstein) or open a Github Issue if you have feedback.
+
+Thanks!
+
+== Used This Code?
+
+Please let us know if you've used this code in any products or projects. We'd love to hear about your experience! Tweet to [@jfeldstein](twitter.com/jfeldstein) or [@msfeldstein](twitter.com/msfeldstein)
