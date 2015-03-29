@@ -1,6 +1,5 @@
 require 'analytics_instrumentation/analytics_attribution'
 require 'analytics_instrumentation/analytics_mapping'
-require 'analytics_instrumentation/analytics_mapping_api'
 
 module AnalyticsInstrumentation
   include AnalyticsAttribution
