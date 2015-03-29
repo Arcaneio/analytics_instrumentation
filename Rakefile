@@ -1,34 +1,40 @@
-begin
-  require 'bundler/setup'
-rescue LoadError
-  puts 'You must `gem install bundler` and `bundle install` to run rake tasks'
-end
-
-require 'rdoc/task'
-
-RDoc::Task.new(:rdoc) do |rdoc|
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title    = 'AnalyticsInstrumentation'
-  rdoc.options << '--line-numbers'
-  rdoc.rdoc_files.include('README.rdoc')
-  rdoc.rdoc_files.include('lib/**/*.rb')
-end
-
-
-
-
-
-
-Bundler::GemHelper.install_tasks
-
+require 'rubygems'
+require 'rake'
 require 'rake/testtask'
+$:.push File.expand_path("../lib", __FILE__)
+require "analytics_instrumentation"
 
-Rake::TestTask.new(:test) do |t|
-  t.libs << 'lib'
-  t.libs << 'test'
-  t.pattern = 'test/**/*_test.rb'
-  t.verbose = false
+# Rake::TestTask.new(:test) do |test|
+#   test.libs << 'lib' << 'test'
+#   test.pattern = 'test/{functional,unit}/**/*_test.rb'
+# end
+
+# namespace :test do
+#   Rake::TestTask.new(:lint) do |test|
+#     test.libs << 'lib' << 'test'
+#     test.pattern = 'test/test_active_model_lint.rb'
+#   end
+
+#   task :all => ['test', 'test:lint']
+# end
+
+# task :default => 'test:all'
+
+desc 'Builds the gem'
+task :build do
+  sh "gem build analytics_instrumentation.gemspec"
 end
 
+desc 'Builds and installs the gem'
+task :install => :build do
+  sh "gem install analytics_instrumentation-#{AnalyticsInstrumentation::VERSION}"
+end
 
-task default: :test
+desc 'Tags version, pushes to remote, and pushes gem'
+task :release => :build do
+  sh "git tag v#{AnalyticsInstrumentation::VERSION}"
+  sh "git push origin master"
+  sh "git push origin v#{AnalyticsInstrumentation::VERSION}"
+  sh "gem push analytics_instrumentation-#{AnalyticsInstrumentation::VERSION}.gem"
+  sh "rm analytics_instrumentation-#{AnalyticsInstrumentation::VERSION}.gem"
+end
