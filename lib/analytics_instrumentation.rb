@@ -1,14 +1,17 @@
 require 'analytics_instrumentation/analytics_attribution'
 require 'analytics_instrumentation/analytics_mapping'
+require 'analytics_instrumentation/config'
+require 'segment/analytics'
+require 'voight_kampff'
 
 module AnalyticsInstrumentation
   include AnalyticsAttribution
 
   class << self
     def included(base)
-      @segment = Segment::Analytics.new({
-          write_key:  @config.segment_write_key,
-          on_error:   @config.error_handler
+      @@segment = Segment::Analytics.new({
+          write_key:  @@config.segment_write_key,
+          on_error:   @@config.error_handler
       })
 
       base.class_eval do
@@ -18,13 +21,13 @@ module AnalyticsInstrumentation
     end
 
     def configure(&proc)
-      @config ||= Config.new
-      yield @config
+      @@config ||= AnalyticsInstrumentation::Config.new
+      yield @@config
 
-      unless @config.valid?
-        errors = @config.errors.full_messages.join(', ')
-        raise Config::Invalid.new(errors)
-      end
+      # unless @config.valid?
+      #   errors = @config.errors.full_messages.join(', ')
+      #   raise AnalyticsInstrumentation::Config::Invalid.new(errors)
+      # end
     end
   end
 
@@ -34,7 +37,7 @@ module AnalyticsInstrumentation
       if current_user
         if !session[:last_seen] || session[:last_seen] < 30.minutes.ago
           analyticsTrackEvent("Session Start")
-          if @config.intercom? && Rails.env.production?
+          if @@config.intercom? && Rails.env.production?
             Intercom.post("https://api.intercom.io/users", {user_id:current_user.id, new_session:true})
           end
         end
@@ -46,7 +49,11 @@ module AnalyticsInstrumentation
         session[:last_seen_logged_out] = Time.now
       end
     rescue => e
-      @config.error_handler(e, "Analytics Check Session Crash: #{request.filtered_path}")
+      puts "FOUND ERROR #{e.inspect}"
+      puts caller
+      puts @@config.inspect
+      puts @@config.error_handler.inspect
+      @@config.error_handler(e, "Analytics Check Session Crash: #{request.filtered_path}")
     end
   end
 
@@ -72,7 +79,7 @@ module AnalyticsInstrumentation
       properties.merge! analyticsSuperProperties
       analyticsTrackEvent "Page View", properties
     rescue => e
-      @config.error_handler(e, "Analytics Crash: #{request.filtered_path}")
+      @@config.error_handler(e, "Analytics Crash: #{request.filtered_path}")
     end
   end
 
@@ -97,8 +104,8 @@ module AnalyticsInstrumentation
     }
 
     logger.debug "Analytics.alias #{aliasProperties}"
-    @segment.alias(aliasProperties)
-    @segment.flush
+    @@segment.alias(aliasProperties)
+    @@segment.flush
   end
 
   def analyticsSetPerson(user)
@@ -106,11 +113,11 @@ module AnalyticsInstrumentation
 
     properties = {
       user_id: user.id,
-      traits: @config.custom_user_traits(user)
+      traits: @@config.custom_user_traits(user)
     }
 
     logger.debug "Analytics.identify #{JSON.pretty_generate(properties)}"
-    @segment.identify(properties)
+    @@segment.identify(properties)
   end
 
   def analyticsSuperProperties
@@ -139,7 +146,7 @@ module AnalyticsInstrumentation
     properties["source"]    = params[:source] if params[:source]
 
     properties.merge! analyticsSuperProperties
-    properties.merge! @config.extra_event_properties
+    properties.merge! @@config.extra_event_properties
 
     analyticsApplyOriginatingPage properties
 
@@ -157,7 +164,7 @@ module AnalyticsInstrumentation
     }
 
     logger.debug "Analytics.track #{JSON.pretty_generate(analyticsProperties)}"
-    @segment.track(analyticsProperties)
+    @@segment.track(analyticsProperties)
   end
 
   def raw_analytics_id

@@ -28,7 +28,7 @@ The behaviors exposed are:
       config.segment_write_key = ENV["SEGMENT_API_KEY"] || ""
 
       # Define a hash of traits to be passed to `#identify()` calls for each user.
-      config.custom_user_traits = (user) -> {
+      config.custom_user_traits = Proc.new { |user|
         {
           name: user.full_name,
           email: user.email,
@@ -47,7 +47,7 @@ The behaviors exposed are:
       # 1. Event-specific properties are configured via the YML files (see below)
       # 2. System-wide properties are included for you with all events (see below)
       # 3. To have your own system-wide properties included on all events, have them returned by a Proc set to `config.extra_event_properties`, like so:
-      config.extra_event_properties = -> {
+      config.extra_event_properties = Proc.new {
         {
           user_sees_experiment_a: current_user.experiment_a?
           user_sees_experiment_b: current_user.experiment_b?
@@ -56,9 +56,9 @@ The behaviors exposed are:
 
       # To capture and handle errors that happen within AnalyticsInstrumentation,
       # Define an error_handler, like so:
-      config.error_handler = (e, msg) -> {
+      config.error_handler = Proc.new { |e, msg|
         if Rails.env.production?
-          Rollbar.error(e, msg)
+          Rollbar.error(e, msg) # or Airbrake, etc
         else
           raise
         end

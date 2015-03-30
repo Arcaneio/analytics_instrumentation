@@ -16,18 +16,19 @@ module AnalyticsInstrumentation
       :custom_user_traits,
       :error_handler
     ]
+
     validate do
-      @@REQUIRED_CALLABLES.each |callable| do
-        unless self.send(callable).respond_to?(:call)
-          errors.add(callable, "must be a callable object (eg. Proc)")
+      @@REQUIRED_CALLABLES.each do |callable|
+        unless self.send(callable).is_a?(Proc)
+          errors.add(callable, "must be a Proc")
         end
       end
     end
 
     def initialize
-      self.extra_event_properties = -> {}
-      self.custom_user_traits     = -> {}
-      self.error_handler          = (msg) -> { raise }
+      self.extra_event_properties = Proc.new {}
+      self.custom_user_traits     = Proc.new {}
+      self.error_handler          = Proc.new { |e, msg=""| raise }
     end
 
     def custom_user_traits(user)
