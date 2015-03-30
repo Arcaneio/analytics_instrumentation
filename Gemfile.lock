@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    analytics_instrumentation (0.1.0)
+    analytics_instrumentation (0.1.2)
       analytics-ruby (~> 2.0)
       rails (~> 4.2)
       voight_kampff (~> 0)

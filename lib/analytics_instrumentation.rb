@@ -1,8 +1,10 @@
+require 'active_model'
+require 'segment/analytics'
+require 'voight_kampff'
+
 require 'analytics_instrumentation/analytics_attribution'
 require 'analytics_instrumentation/analytics_mapping'
 require 'analytics_instrumentation/config'
-require 'segment/analytics'
-require 'voight_kampff'
 
 module AnalyticsInstrumentation
   include AnalyticsAttribution
