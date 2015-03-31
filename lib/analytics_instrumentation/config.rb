@@ -31,14 +31,6 @@ module AnalyticsInstrumentation
       self.error_handler          = Proc.new { |e, msg=""| raise }
     end
 
-    def custom_user_traits(user)
-      self.custom_user_traits(user) || {}
-    end
-
-    def extra_event_properties
-      self.extra_event_properties() || {}
-    end
-
     def intercom?
       Intercom rescue false
     end
