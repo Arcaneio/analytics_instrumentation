@@ -51,11 +51,8 @@ module AnalyticsInstrumentation
         session[:last_seen_logged_out] = Time.now
       end
     rescue => e
-      puts "FOUND ERROR #{e.inspect}"
-      puts caller
-      puts @@config.inspect
-      puts @@config.error_handler.inspect
-      @@config.error_handler(e, "Analytics Check Session Crash: #{request.filtered_path}")
+      logger.debug "Errpr found in analyticsCheckSessionStart: #{e.inspect}"
+      @@config.error_handler.call(e, "Analytics Check Session Crash: #{request.filtered_path}")
     end
   end
 
@@ -81,7 +78,8 @@ module AnalyticsInstrumentation
       properties.merge! analyticsSuperProperties
       analyticsTrackEvent "Page View", properties
     rescue => e
-      @@config.error_handler(e, "Analytics Crash: #{request.filtered_path}")
+      logger.debug "Errpr found in analyticsLogPageView: #{e.inspect}"
+      @@config.error_handler.call(e, "Analytics Crash: #{request.filtered_path}")
     end
   end
 
@@ -113,9 +111,11 @@ module AnalyticsInstrumentation
   def analyticsSetPerson(user)
     return if skip_analytics?
 
+    user_traits = instance_exec(user, &@@config.custom_user_traits)
+
     properties = {
       user_id: user.id,
-      traits: @@config.custom_user_traits(user)
+      traits: (user_traits||{})
     }
 
     logger.debug "Analytics.identify #{JSON.pretty_generate(properties)}"
@@ -148,7 +148,10 @@ module AnalyticsInstrumentation
     properties["source"]    = params[:source] if params[:source]
 
     properties.merge! analyticsSuperProperties
-    properties.merge! @@config.extra_event_properties
+
+    # User defined extra props, called in context
+    extra_props = instance_exec(&@@config.extra_event_properties)
+    properties.merge! (extra_props || {})
 
     analyticsApplyOriginatingPage properties
 
