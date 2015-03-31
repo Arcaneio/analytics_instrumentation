@@ -20,7 +20,7 @@ class AnalyticsMapping
 
     replaceAllTokens(analysis, params, view_assigns)
 
-    analysis
+    HashWithIndifferentAccess.new(analysis)
   end
 
   def self.replaceAllTokens(obj, params, view_assigns)
