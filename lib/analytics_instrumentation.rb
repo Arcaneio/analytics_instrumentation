@@ -205,7 +205,7 @@ module AnalyticsInstrumentation
     return true if Rails.env.test?
     return true if request.bot?
     return true if request.user_agent.nil?
-    bad_strings = ["http:", "https:", "twitterbot", "bingbot", "googlebot", "gediapartners-google"]
+    bad_strings = ["http:", "https:", "twitterbot", "bingbot", "googlebot", "mediapartners-google", "Webhook"]
     return true if bad_strings.any? { |s| !request.user_agent.downcase.index(s).nil? }
     false
   end
