@@ -4,8 +4,10 @@ module AnalyticsAttribution
     attribution_data = {
       first_external_referrer:  get_first_referrer,
       latest_external_referrer: get_latest_referrer,
-      latest_utm:               get_latest_utm
     }
+
+    attribution_data.merge! get_utm(:first)
+    attribution_data.merge! get_utm(:latest)
 
     # Persist
     attribution_data.each do |k,v|
@@ -32,7 +34,19 @@ module AnalyticsAttribution
     end
   end
 
-  def get_latest_utm
+  def get_utm(which=:latest)
+    if which == :first
+      first = {
+        first_utm_name:     get_cookie('first_utm_name'),
+        first_utm_source:   get_cookie('first_utm_source'),
+        first_utm_medium:   get_cookie('first_utm_medium'),
+        first_utm_term:     get_cookie('first_utm_term'),
+        first_utm_content:  get_cookie('first_utm_content')
+      }
+
+      return first if first.reject{|k,v| v.nil? }.any?
+    end
+
     name    = params[:utm_campaign]
     source  = params[:utm_source]
     medium  = params[:utm_medium]
@@ -40,14 +54,20 @@ module AnalyticsAttribution
     content = params[:utm_content]
 
     if name.blank?
-      get_cookie 'latest_utm'
+      {
+        latest_utm_name:     get_cookie('latest_utm_name'),
+        latest_utm_source:   get_cookie('latest_utm_source'),
+        latest_utm_medium:   get_cookie('latest_utm_medium'),
+        latest_utm_term:     get_cookie('latest_utm_term'),
+        latest_utm_content:  get_cookie('latest_utm_content')
+      }
     else
       {
-        name:     name,
-        source:   source,
-        medium:   medium,
-        term:     term,
-        content:  content
+        latest_utm_name:     name,
+        latest_utm_source:   source,
+        latest_utm_medium:   medium,
+        latest_utm_term:     term,
+        latest_utm_content:  content
       }
     end
   end
