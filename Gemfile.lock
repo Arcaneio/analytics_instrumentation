@@ -1,8 +1,9 @@
 PATH
   remote: .
   specs:
-    analytics_instrumentation (0.1.5)
+    analytics_instrumentation (0.1.6)
       analytics-ruby (~> 2.0)
+      browser (~> 0.8)
       rails (~> 4.2)
       voight_kampff (~> 0)
 
@@ -46,6 +47,7 @@ GEM
       tzinfo (~> 1.1)
     analytics-ruby (2.0.12)
     arel (6.0.0)
+    browser (0.8.0)
     builder (3.2.2)
     erubis (2.7.0)
     ffi (1.9.8)
