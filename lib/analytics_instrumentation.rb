@@ -135,12 +135,13 @@ module AnalyticsInstrumentation
       "Ajax" => !request.xhr?.nil?
     }
     if current_user
-      superProperties.merge!({
-        "User Created At" => current_user.created_at,
-        "Username" => current_user.try(:username),
-        "Full name" => current_user.try(:full_name),
-        "User ID" => current_user.id,
-        "Login Provider" => current_user.try(:provider) || "Email"
+      superProperties.merge!(Hash.new.tap{ |and_set| # this one's for Meez :D
+        and_set["User Created At"]  = current_user.created_at
+        and_set["Username"]         = current_user.username   if current_user.username
+        and_set["Full name"]        = current_user.full_name  if current_user.full_name
+        and_set["User ID"]          = current_user.id
+        and_set["Email"]            = current_user.email      if current_user.email
+        and_set["Login Provider"]   = current_user.try(:provider) || "Email"
       })
     end
     superProperties
