@@ -132,17 +132,12 @@ module AnalyticsInstrumentation
   def analyticsSuperProperties
     superProperties = {
       "Raw Analytics ID" => raw_analytics_id,
-      "Ajax" => !request.xhr?.nil?
+      "Ajax" => !request.xhr?.nil?,
+      "Platform" => analyticsPlatform
     }
     if current_user
-      superProperties.merge!(Hash.new.tap{ |and_set| # this one's for Meez :D
-        and_set["User Created At"]  = current_user.created_at
-        and_set["Username"]         = current_user.username   if current_user.username
-        and_set["Full name"]        = current_user.full_name  if current_user.full_name
-        and_set["User ID"]          = current_user.id
-        and_set["Email"]            = current_user.email      if current_user.email
-        and_set["Login Provider"]   = current_user.try(:provider) || "Email"
-      })
+      user_traits = instance_exec(user, &@@config.custom_user_traits)
+      superProperties.merge!({user:user_traits}) if user_traits
     end
     superProperties
   end
@@ -195,6 +190,15 @@ module AnalyticsInstrumentation
   end
 
   private
+  def analyticsPlatform
+    case
+    when browser.mobile?            then "Mobile"
+    when browser.platform != :other then "Desktop"
+    else
+      "Other"
+    end
+  end
+
   def googleAnalyticsID
     ck = cookies[:_ga]
     return "1.1" if ck.nil?
