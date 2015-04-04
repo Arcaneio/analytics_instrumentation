@@ -40,7 +40,10 @@ module AnalyticsInstrumentation
         if !session[:last_seen] || session[:last_seen] < 30.minutes.ago
           analyticsTrackEvent("Session Start")
           if @@config.intercom? && Rails.env.production?
-            Intercom.post("https://api.intercom.io/users", {user_id:current_user.id, new_session:true})
+            begin
+              Intercom.post("https://api.intercom.io/users", {user_id:current_user.id, new_session:true})
+            rescue
+            end
           end
         end
         session[:last_seen] = Time.now
@@ -115,7 +118,11 @@ module AnalyticsInstrumentation
 
     properties = {
       user_id: user.id,
-      traits: (user_traits||{})
+      traits: (user_traits||{}),
+      integrations: {
+        # Don't send leads to C.io if they don't have an email
+        "Customer.io" => (!user.email.blank?)
+      }
     }
 
     logger.debug "Analytics.identify #{JSON.pretty_generate(properties)}"
@@ -165,6 +172,10 @@ module AnalyticsInstrumentation
         'Google Analytics' => {
           clientId: googleAnalyticsID
         }
+      },
+      integrations: {
+        # Don't send leads to C.io if they don't have an email
+        "Customer.io" => !!current_user
       }
     }
 
