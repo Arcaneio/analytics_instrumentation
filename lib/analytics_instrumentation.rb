@@ -1,6 +1,7 @@
 require 'active_model'
 require 'segment/analytics'
 require 'voight_kampff'
+require 'browser'
 
 require 'analytics_instrumentation/analytics_attribution'
 require 'analytics_instrumentation/analytics_mapping'
