@@ -8,6 +8,12 @@ or
 
     gem install 'analytics_instrumentation'
 
+and then `include AnalyticsInstrumentation` in `ApplicationController`:
+
+    class ApplicationController < ActionController::Base
+      include AnalyticsInstrumentation
+    end
+
 
 == Usage
 

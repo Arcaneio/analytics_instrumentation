@@ -23,4 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency "browser", '~> 0.8'
 
   s.add_development_dependency "sqlite3", '~> 0'
+
+  s.post_install_message = "VERSION 0.1.7 introduces BREAKING CHANGES! You MUST include AnalyticsInstrumentation in your ApplicationController, manually!"
+
 end
