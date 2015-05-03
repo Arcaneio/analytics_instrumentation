@@ -207,7 +207,7 @@ module AnalyticsInstrumentation
   end
 
   def skip_analytics?
-    return true if Rails.env.test?
+    return true if Rails.env.test? || ENV['RAILS_ENV']=='test' || ENV['RACK_ENV']=='test'
     return true if request.bot?
     return true if request.user_agent.nil?
     bad_strings = ["http:", "https:", "twitterbot", "bingbot", "googlebot", "mediapartners-google", "Webhook"]
