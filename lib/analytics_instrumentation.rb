@@ -137,7 +137,7 @@ module AnalyticsInstrumentation
       "Platform" => analyticsPlatform
     }
     if current_user
-      user_traits = instance_exec(user, &@@config.custom_user_traits)
+      user_traits = instance_exec(current_user, &@@config.custom_user_traits)
       superProperties.merge!({user:user_traits}) if user_traits
     end
     superProperties
