@@ -1,5 +1,5 @@
 module AnalyticsAttribution
-  def add_attribution(props)
+  def add_attribution(props={})
     # Gather
     attribution_data = {
       first_external_referrer:  get_first_referrer,
