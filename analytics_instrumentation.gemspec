@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.version     = AnalyticsInstrumentation::VERSION
   s.authors     = ["Jordan Feldstein", "Michael Feldstein"]
   s.email       = ["jfeldstein@gmail.com", "michael@canopy.co"]
-  s.homepage    = "https://github.com/jfeldstein/analytics_implementation"
+  s.homepage    = "https://github.com/arcaneio/analytics_instrumentation"
   s.summary     = "Best-practices analytics instrumentation for Rails."
   s.description = "Add analytics to any app, quickly, robustly, and accurately. \n\nDefine events and their properties in a single, simple .yml file.\n\nPlus: Get valuable campaign attribution, and best-practices learned across dozens of projects, to streamline the collection of clean, usable, reliable product and user data."
   s.license     = "MIT"
