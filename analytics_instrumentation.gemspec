@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency "analytics-ruby", '~> 2.0'
   s.add_dependency "voight_kampff", '~> 0'
   s.add_dependency "browser", '~> 0.8'
-  s.add_dependency "addressable", "~> 2.4.0"
+  s.add_dependency "addressable", "~> 2.3"
 
   s.add_development_dependency "sqlite3", '~> 0'
 
