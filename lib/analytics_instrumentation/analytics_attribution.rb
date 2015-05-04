@@ -74,7 +74,7 @@ module AnalyticsAttribution
 
   def attribution_host(url)
     return nil if url.nil?
-    uri = URI.parse(url)
+    uri = Addressable::URI.parse(url)
     uri.host && uri.host.sub(/\Awww\./,'').downcase
   end
 
