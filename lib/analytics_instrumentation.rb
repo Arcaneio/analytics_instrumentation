@@ -181,7 +181,7 @@ module AnalyticsInstrumentation
   end
 
   def raw_analytics_id
-    session[:analytics_id] ||= (rand * 1000000000000000).to_i
+    session[:analytics_id] ||= SecureRandom.uuid
     session[:analytics_id]
   end
 
