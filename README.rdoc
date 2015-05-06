@@ -33,6 +33,9 @@ The behaviors exposed are:
       # Your Segment.io write key is required. We will instantiate the client.
       config.segment_write_key = ENV["SEGMENT_API_KEY"] || ""
 
+      # # Track "Page View" events for ajax requests? (Default = false)
+      # config.track_ajax_as_page_view = true
+
       # Define a hash of traits to be passed to `#identify()` calls for each user.
       config.custom_user_traits = Proc.new { |user|
         {

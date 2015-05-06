@@ -8,6 +8,7 @@ module AnalyticsInstrumentation
     attr_accessor :custom_user_traits
     attr_accessor :error_handler
     attr_accessor :segment_write_key
+    attr_accessor :track_ajax_as_page_view
 
     validates_presence_of :segment_write_key
 
@@ -26,9 +27,10 @@ module AnalyticsInstrumentation
     end
 
     def initialize
-      self.extra_event_properties = Proc.new {}
-      self.custom_user_traits     = Proc.new {}
-      self.error_handler          = Proc.new { |e, msg=""| raise }
+      self.extra_event_properties  = Proc.new {}
+      self.custom_user_traits      = Proc.new {}
+      self.error_handler           = Proc.new { |e, msg=""| raise }
+      self.track_ajax_as_page_view = false
     end
 
     def intercom?

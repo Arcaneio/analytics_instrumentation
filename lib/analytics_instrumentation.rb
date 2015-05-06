@@ -71,7 +71,6 @@ module AnalyticsInstrumentation
         if current_user
           analyticsSetPerson(current_user)
         end
-        add_attribution page_view_event[:parameters]
         analyticsTrackEvent page_view_event[:name], page_view_event[:parameters]
         analyticsStoreOriginatingPage page_view_event
       end
@@ -79,8 +78,10 @@ module AnalyticsInstrumentation
       properties = {
         page: request.path
       }
-      properties.merge! analyticsSuperProperties
-      analyticsTrackEvent "Page View", properties
+
+      track_page_view = request.xhr? ? @@config.track_ajax_as_page_view : true
+
+      analyticsTrackEvent("Page View", properties) if track_page_view
     rescue => e
       logger.debug "Errpr found in analyticsLogPageView: #{e.inspect}"
       @@config.error_handler.call(e, "Analytics Crash: #{request.filtered_path}")
@@ -152,6 +153,7 @@ module AnalyticsInstrumentation
     properties["source"]    = params[:source] if params[:source]
 
     properties.merge! analyticsSuperProperties
+    add_attribution properties
 
     # User defined extra props, called in context
     extra_props = instance_exec(&@@config.extra_event_properties)
