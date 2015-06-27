@@ -18,8 +18,10 @@ module AnalyticsInstrumentation
       })
 
       base.class_eval do
+        base.send(:before_filter, :analyticsSetController)
         base.send(:after_filter, :analyticsLogPageView)
         base.send(:after_filter, :analyticsCheckSessionStart)
+        base.send(:after_filter, :analyticsClearController)
       end
     end
 
@@ -32,6 +34,14 @@ module AnalyticsInstrumentation
       #   raise AnalyticsInstrumentation::Config::Invalid.new(errors)
       # end
     end
+  end
+
+  def analyticsSetController
+    Thread.current[:current_controller] = self
+  end
+
+  def analyticsClearController
+    Thread.current[:current_controller] = nil
   end
 
   def analyticsCheckSessionStart
