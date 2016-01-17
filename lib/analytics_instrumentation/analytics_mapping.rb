@@ -1,7 +1,9 @@
+require 'active_support/core_ext/hash/indifferent_access'
+
 class AnalyticsMapping
   def self.createMappings
     # TODO: Reload this on Rails Auto-reload
-    mappings = {}
+    mappings = HashWithIndifferentAccess.new
     @mappingFiles = Dir.glob("config/analytics/*.yml")
     for file in @mappingFiles
       yaml = YAML.load_file(file)

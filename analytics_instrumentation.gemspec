@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency "addressable", "~> 2.3"
 
   s.add_development_dependency "sqlite3", '~> 0'
+  s.add_development_dependency "activesupport"
 
   s.post_install_message = "VERSION 0.1.7 introduces BREAKING CHANGES! You MUST include AnalyticsInstrumentation in your ApplicationController, manually!"
 
