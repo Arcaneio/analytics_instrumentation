@@ -22,7 +22,7 @@ class AnalyticsMapping
 
     replaceAllTokens(analysis, params, view_assigns)
 
-    analysis[:parameters] ||= {}
+    analysis["parameters"] ||= {}
 
     HashWithIndifferentAccess.new(analysis)
   end
